@@ -1,46 +1,96 @@
 # Document Classification & Extraction (NLP/OCR)
 
-This project provides a Python pipeline for document extraction and classification. It uses Optical Character Recognition (OCR) via Tesseract to extract text from documents (PDFs and images) and Natural Language Processing (NLP) with Hugging Face Transformers to classify the extracted text into predefined categories using zero-shot classification.
+**An intelligent pipeline for extracting and classifying information from scanned and digital documents using Computer Vision and Natural Language Processing.**
 
-## Prerequisites
+This project demonstrates a production-ready approach to processing heterogeneous documents (invoices, receipts, ID cards, bank statements). It intelligently detects whether a document requires Optical Character Recognition (OCR) or direct text extraction, classifies the document using Zero-Shot NLP models, and extracts structured key-value fields.
 
-1. **Python 3.8+**
+## Features
+- **Smart Ingestion:** Accepts PDF, PNG, JPG, and JPEG. Detects digital vs. scanned PDFs.
+- **Robust OCR:** Image preprocessing (denoising, thresholding) and Tesseract OCR integration.
+- **NLP Classification:** Zero-shot classification powered by Hugging Face (`facebook/bart-large-mnli`).
+- **Targeted Field Extraction:** Context-aware regex and NLP extraction based on document type.
+- **FastAPI Backend:** Fully asynchronous REST API with Pydantic validation.
+- **Streamlit UI:** Interactive frontend for testing and demonstrating the pipeline.
+
+## Architecture
+See [Architecture Diagram](architecture.md) for a complete system flow.
+
+## Setup & Installation
+
+### Prerequisites
+1. **Python 3.11+**
 2. **Tesseract OCR:** 
-   - **macOS:** `brew install tesseract`
-   - **Ubuntu/Debian:** `sudo apt-get install tesseract-ocr`
-   - **Windows:** Download the installer from the [official repository](https://github.com/UB-Mannheim/tesseract/wiki)
+   - macOS: `brew install tesseract`
+   - Linux: `sudo apt-get install tesseract-ocr`
 3. **Poppler (for PDF support):**
-   - **macOS:** `brew install poppler`
-   - **Ubuntu/Debian:** `sudo apt-get install poppler-utils`
-   - **Windows:** Download the latest poppler package and add the `bin` folder to your PATH.
+   - macOS: `brew install poppler`
+   - Linux: `sudo apt-get install poppler-utils`
 
-## Installation
-
-Clone this repository, create a virtual environment, and install the required dependencies:
-
+### Installation
 ```bash
-git clone <repository_url>
-cd Document_Classification_Extraction
-python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+git clone <repository-url>
+cd document-classification-extraction-nlp-ocr
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env
 ```
 
-## Usage
+## Running the Application
 
-You can run the pipeline from the command line using `main.py`.
+### Start the FastAPI Backend
+```bash
+uvicorn app.main:app --reload
+```
+API documentation available at `http://localhost:8000/docs`
+
+### Start the Streamlit UI
+In a new terminal window:
+```bash
+source venv/bin/activate
+streamlit run app/ui/streamlit_app.py
+```
+Access the UI at `http://localhost:8501`
+
+## API Usage Example
+
+**Endpoint:** `POST /api/v1/process-document`
 
 ```bash
-python main.py --file path/to/your/document.pdf --labels "invoice, receipt, contract, resume, other"
+curl -X POST "http://localhost:8000/api/v1/process-document" \
+  -H "accept: application/json" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@data/sample_documents/invoice.png"
 ```
 
-### Example
-```bash
-python main.py --file data/sample_invoice.png --labels "invoice, medical record, legal contract"
+**Sample Output:**
+```json
+{
+  "filename": "invoice.png",
+  "extracted_text": "Invoice Number: INV-12345...",
+  "classification": {
+    "document_type": "invoice",
+    "scores": {
+      "invoice": 0.98,
+      "resume/cv": 0.01,
+      "generic document": 0.01
+    }
+  },
+  "fields": {
+    "document_type": "invoice",
+    "extracted_fields": {
+      "invoice_number": "INV-12345",
+      "date": "2026-07-01",
+      "total_amount": "1,250.00"
+    }
+  }
+}
 ```
 
-## How It Works
+## Future Improvements
+- Integrate Named Entity Recognition (NER) models (e.g., LayoutLM) for more robust field extraction.
+- Support cloud OCR providers (AWS Textract, Google Cloud Vision) as fallbacks.
+- Add asynchronous processing queues (Celery/Redis) for large document batches.
 
-1. **Document Ingestion**: The system takes an image (PNG/JPG) or a PDF file. If it's a PDF, `pdf2image` converts it into images.
-2. **Text Extraction (OCR)**: `pytesseract` extracts the raw text from the images.
-3. **Classification (NLP)**: The extracted text is passed to a Hugging Face Transformers model (`facebook/bart-large-mnli` by default) for zero-shot classification against the labels you provide.
+## License
+MIT License
