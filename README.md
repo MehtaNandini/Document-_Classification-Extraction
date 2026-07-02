@@ -28,8 +28,8 @@ See [Architecture Diagram](architecture.md) for a complete system flow.
 
 ### Installation
 ```bash
-git clone <repository-url>
-cd document-classification-extraction-nlp-ocr
+git clone https://github.com/MehtaNandini/Document-_Classification-Extraction.git
+cd Document-_Classification-Extraction
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -38,13 +38,23 @@ cp .env.example .env
 
 ## Running the Application
 
-### Start the FastAPI Backend
+### Option 1: Using Docker (Recommended)
+You can easily spin up both the FastAPI backend and Streamlit UI using Docker Compose:
+```bash
+docker compose up --build -d
+```
+- **Streamlit UI:** `http://localhost:8501`
+- **FastAPI Documentation:** `http://localhost:8000/docs`
+
+### Option 2: Running Locally
+
+**Start the FastAPI Backend**
 ```bash
 uvicorn app.main:app --reload
 ```
 API documentation available at `http://localhost:8000/docs`
 
-### Start the Streamlit UI
+**Start the Streamlit UI**
 In a new terminal window:
 ```bash
 source venv/bin/activate
