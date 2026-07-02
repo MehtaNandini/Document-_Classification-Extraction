@@ -36,9 +36,13 @@ def extract_resume_fields(text: str) -> Dict[str, Any]:
     if phone_match:
         fields['phone'] = phone_match.group(1).strip()
     else:
-        # Fallback generic pattern
-        fallback_match = re.search(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', text)
-        fields['phone'] = fallback_match.group(0) if fallback_match else None
+        # Fallback generic pattern (includes international and standard formats)
+        fallback_match = re.search(r'(?:\+\d{1,3}[\s\d\-()]{7,20})|(?:\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})', text)
+        fields['phone'] = fallback_match.group(0).strip() if fallback_match else None
+        
+    # Date of birth
+    dob_match = re.search(r'(?i)(?:dob|date\s*of\s*birth|born)\s*[:\-]?\s*(\d{1,4}[-/.]\d{1,2}[-/.]\d{1,4}|[A-Za-z]+\s*\d{1,2},?\s*\d{4}|\d{1,2}\s*[A-Za-z]+\s*\d{4}|\d{2}\.\d{2}\.\d{4})', text)
+    fields['date_of_birth'] = dob_match.group(1).strip() if dob_match else None
         
     # LinkedIn
     linkedin_match = re.search(r'(?i)(?:linkedin\.com/in/)[a-zA-Z0-9_-]+/?', text)
